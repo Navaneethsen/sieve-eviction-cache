@@ -104,12 +104,6 @@ The SIEVE algorithm is a simple and effective eviction policy that:
 | `size()` | Get the current number of entries |
 | `getCapacity()` | Get the maximum capacity |
 
-### Statistics Methods
-
-| Method | Description |
-|--------|-------------|
-| `getStats()` | Get current cache statistics |
-| `clearStats()` | Reset all statistics counters |
 
 ### CacheStats Properties
 
