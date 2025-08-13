@@ -1,7 +1,5 @@
 # SIEVE Eviction Cache
 
-# Sieve Eviction Cache
-
 ![Build Status](https://github.com/Navaneethsen/sieve-eviction-cache/workflows/Java%20CI%20with%20Maven/badge.svg)
 ![Java](https://img.shields.io/badge/Java-17-orange)
 
