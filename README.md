@@ -1,5 +1,13 @@
 # SIEVE Eviction Cache
 
+# Sieve Eviction Cache
+
+![Build Status](https://github.com/Navaneethsen/sieve-eviction-cache/workflows/Java%20CI%20with%20Maven/badge.svg)
+![Java](https://img.shields.io/badge/Java-17-orange)
+![License](https://img.shields.io/github/license/Navaneethsen/sieve-eviction-cache)
+![GitHub release](https://img.shields.io/github/v/release/Navaneethsen/sieve-eviction-cache)
+
+
 A high-performance, thread-safe Java implementation of the SIEVE cache eviction algorithm with comprehensive statistics tracking.
 
 For more details, please read through my medium post [SIEVE: The Surprisingly Simple Cache Eviction Algorithm](https://navaneethsen.medium.com/sieve-the-surprisingly-simple-cache-eviction-algorithm-525b2b7ba3b2)
