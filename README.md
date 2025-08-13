@@ -16,7 +16,7 @@ For more details, please read through my medium post [SIEVE: The Surprisingly Si
 - **Statistics Tracking**: Comprehensive metrics including hit rate, miss rate, eviction count, and more
 - **Generic Types**: Full support for any key-value types with Java generics
 - **Builder Pattern**: Easy cache configuration and instantiation
-- **Comprehensive Testing**: Many JUnit tests covering differenvt scenarios including race conditions and stress testing
+- **Comprehensive Testing**: Many JUnit tests covering different scenarios including race conditions and stress testing
 
 ## Quick Start
 
@@ -55,17 +55,6 @@ String removed = cache.remove("key1"); // Returns "value1"
 cache.clear();
 ```
 
-### Using the Builder Pattern
-
-```java
-import org.cache.common.CacheBuilder;
-
-// Build a cache with custom configuration
-SieveCache<Integer, String> cache = CacheBuilder.<Integer, String>newBuilder()
-    .capacity(500)
-    .build();
-```
-
 ### Statistics Tracking
 
 ```java
@@ -95,12 +84,6 @@ The SIEVE algorithm is a simple and effective eviction policy that:
 3. **Second Chance**: Gives accessed items a second chance by clearing their visited bit
 4. **Optimal Performance**: Combines simplicity of FIFO with effectiveness approaching LRU
 
-### Algorithm Benefits
-
-- **Better Hit Rates**: Often outperforms LRU and FIFO on real workloads
-- **Low Overhead**: Minimal metadata (just one bit per entry)
-- **Scan Resistance**: Resistant to cache pollution from sequential scans
-- **Concurrent Friendly**: Simple structure enables efficient concurrent implementation
 
 ## API Reference
 
