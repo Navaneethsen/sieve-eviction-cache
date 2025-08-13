@@ -165,24 +165,6 @@ The SIEVE cache implementation is fully thread-safe:
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-### Development Setup
-
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/SieveEvictionCache.git`
-3. Create a feature branch: `git checkout -b feature/amazing-feature`
-4. Make your changes and add tests
-5. Run the test suite: `mvn test`
-6. Commit your changes: `git commit -m 'Add amazing feature'`
-7. Push to the branch: `git push origin feature/amazing-feature`
-8. Open a Pull Request
-
-### Code Style
-
-- Follow standard Java conventions
-- Add comprehensive tests for new features
-- Maintain thread safety
-- Update documentation as needed
-
 
 ## Support
 
