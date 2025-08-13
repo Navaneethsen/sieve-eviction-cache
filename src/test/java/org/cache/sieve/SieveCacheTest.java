@@ -1636,6 +1636,11 @@ public class SieveCacheTest {
                         "Size exceeds capacity at iteration " + i);
             }
         }
+    }
+    
+    @Nested
+    @DisplayName("Scan Resistance Tests")
+    class ScanResistanceTests {
         
         @Test
         @DisplayName("Scan Resistance Test")
@@ -1897,8 +1902,6 @@ public class SieveCacheTest {
                 cache.put(key, "valueB_" + key);
             }
             
-            System.out.println(cache);
-            
             // Phase 2: Make set A hot initially
             for (int round = 0; round < 20; round++) {
                 for (String key : setA) {
@@ -1931,12 +1934,10 @@ public class SieveCacheTest {
                 }
                 
                 // Add some pressure by inserting new items occasionally
-                if (round> 1  && round % 10 == 0) {
+                if (round > 1  && round % 10 == 0) {
                     cache.put("temp_" + round, "temp_value");
-                    System.out.println(cache);
                 }
             }
-            System.out.println(cache);
             
             // Phase 4: Make set B very hot
             for (int round = 0; round < 25; round++) {

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.LongAdder;
  * @param <K> The type of keys maintained by this cache
  * @param <V> The type of mapped values
  */
-public abstract class AbstractCache<K, V> implements ICache<K, V> {
+public abstract class AbstractCache<K, V> implements IStatisticalCache<K, V> {
     
     protected final int capacity;
     
@@ -52,10 +52,12 @@ public abstract class AbstractCache<K, V> implements ICache<K, V> {
         return capacity;
     }
     
+    @Override
     public CacheStats getStats() {
         return new CacheStats(hits.sum(), misses.sum(), evictions.sum());
     }
     
+    @Override
     public void clearStats() {
         hits.reset();
         misses.reset();
@@ -65,21 +67,24 @@ public abstract class AbstractCache<K, V> implements ICache<K, V> {
     /**
      * Records a cache hit.
      */
-    protected void recordHit() {
+    @Override
+    public void recordHit() {
         hits.increment();
     }
     
     /**
      * Records a cache miss.
      */
-    protected void recordMiss() {
+    @Override
+    public void recordMiss() {
         misses.increment();
     }
     
     /**
      * Records an eviction.
      */
-    protected void recordEviction() {
+    @Override
+    public void recordEviction() {
         evictions.increment();
     }
     

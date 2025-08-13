@@ -26,7 +26,7 @@ package org.cache.common;
 /**
  * Immutable cache statistics holder.
  */
-public final class CacheStats {
+public final class CacheStats{
     private final long hits;
     private final long misses;
     private final long evictions;
