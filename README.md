@@ -7,7 +7,7 @@ For more details, please read through my medium post [SIEVE: The Surprisingly Si
 ## References
 - [Zhang et al., 2024 — SIEVE is Simpler than LRU: An Efficient Turn-Key Eviction Algorithm for Web Caches](https://junchengyang.com/publication/nsdi24-SIEVE.pdf)
 - [SIEVE is simpler than LRU - Website](https://cachemon.github.io/SIEVE-website/blog/2023/12/17/sieve-is-simpler-than-lru/)
-- [ChatGPT - Claude](https://claude.ai) for generating code and documentation
+- [ChatGPT - Claude](https://claude.ai) for generating parts of the code and documentation
 
 ## Features
 
