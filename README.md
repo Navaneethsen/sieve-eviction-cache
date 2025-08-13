@@ -205,7 +205,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 If you have questions or need help:
 
-1. Check the [Issues](https://github.com/your-username/SieveEvictionCache/issues) page
+1. Check the [Issues](https://github.com/Navaneethsen/sieve-eviction-cache/issues) page
 2. Create a new issue if your question isn't answered
 
 ---
