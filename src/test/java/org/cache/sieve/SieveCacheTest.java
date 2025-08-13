@@ -1520,7 +1520,7 @@ public class SieveCacheTest {
     @Nested
     @DisplayName("Correctness Tests")
     class CorrectnessTests {
-
+        
         @Test
         @DisplayName("SIEVE Invariant")
         void testSieveInvariant() {
@@ -1542,7 +1542,7 @@ public class SieveCacheTest {
             assertNotNull(cache.get(1), "Visited item retained");
             assertNotNull(cache.get(3), "Visited item retained");
         }
-
+        
         @Test
         @DisplayName("Eviction Fairness")
         void testEvictionFairness() {
@@ -1580,7 +1580,7 @@ public class SieveCacheTest {
             assertTrue(maxEvictions - minEvictions <= 5,
                     "Eviction fairness maintained");
         }
-
+        
         @Test
         @DisplayName("Visited Bit Semantics")
         void testVisitedBitSemantics() {
@@ -1606,7 +1606,7 @@ public class SieveCacheTest {
             assertNotNull(cache.get("b"), "Get-visited retained");
             assertNotNull(cache.get("c"), "Put-visited retained");
         }
-
+        
         @Test
         @DisplayName("Capacity Invariant")
         void testCapacityInvariant() {
@@ -1635,6 +1635,345 @@ public class SieveCacheTest {
                 assertTrue(cache.size() <= capacity,
                         "Size exceeds capacity at iteration " + i);
             }
+        }
+        
+        @Test
+        @DisplayName("Scan Resistance Test")
+        void testScanResistance() {
+            // Create a small cache to make evictions visible
+            int capacity = 10;
+            SieveCache<String, String> cache = new SieveCache<>(capacity);
+            
+            // Phase 1: Populate cache with "hot" (frequently accessed) data
+            String[] hotKeys = {"hot1", "hot2", "hot3", "hot4", "hot5"};
+            for (String key : hotKeys) {
+                cache.put(key, "value_" + key);
+            }
+            
+            // Phase 2: Access hot keys multiple times to establish them as frequently used
+            for (int round = 0; round < 3; round++) {
+                for (String key : hotKeys) {
+                    cache.get(key); // This sets the visited bit in SIEVE
+                }
+            }
+            
+            // Phase 3: Simulate a sequential scan that would pollute a traditional cache
+            // Add many sequential items that won't be accessed again (scan pattern)
+            int scanSize = 50; // Much larger than cache capacity
+            for (int i = 0; i < scanSize; i++) {
+                cache.put("scan_" + i, "scan_value_" + i);
+                // Don't access these items again - this simulates a one-time scan
+            }
+            
+            // Phase 4: Verify that hot items survived the scan
+            int hotItemsRetained = 0;
+            for (String hotKey : hotKeys) {
+                if (cache.get(hotKey) != null) {
+                    hotItemsRetained++;
+                }
+            }
+            
+            // Phase 5: Analyze the results
+            CacheStats stats = cache.getStats();
+            
+            // The key assertion: Most hot items should survive the scan
+            // In a scan-resistant algorithm like SIEVE, frequently accessed items
+            // should not be completely flushed out by a sequential scan
+            assertTrue(hotItemsRetained >= 2,
+                    String.format("Expected at least 2 hot items to survive scan, but only %d survived. " +
+                                    "Hot items retained: %d/%d. This suggests poor scan resistance.",
+                            hotItemsRetained, hotItemsRetained, hotKeys.length));
+            
+            // Additional verification: The cache should have evicted many items
+            assertTrue(stats.getEvictions() > capacity,
+                    String.format("Expected many evictions (>%d) during scan, got %d",
+                            capacity, stats.getEvictions()));
+            
+            // The cache should be at capacity
+            assertEquals(capacity, cache.size(), "Cache should be at full capacity after scan");
+            
+            // Most items in the cache should now be from the scan (recent items)
+            int scanItemsInCache = 0;
+            for (int i = 0; i < scanSize; i++) {
+                if (cache.containsKey("scan_" + i)) {
+                    scanItemsInCache++;
+                }
+            }
+            
+            // Verify that the cache contains a mix: some hot items survived + some recent scan items
+            assertTrue(scanItemsInCache > 0, "Some scan items should be in cache");
+            assertTrue(hotItemsRetained > 0, "Some hot items should have survived");
+            
+            System.out.printf("Scan Resistance Test Results:%n");
+            System.out.printf("  Hot items retained: %d/%d (%.1f%%)%n",
+                    hotItemsRetained, hotKeys.length,
+                    (hotItemsRetained * 100.0) / hotKeys.length);
+            System.out.printf("  Scan items in cache: %d/%d%n", scanItemsInCache, scanSize);
+            System.out.printf("  Total evictions during scan: %d%n", stats.getEvictions());
+            System.out.printf("  Cache utilization: %d/%d%n", cache.size(), capacity);
+            
+            // Final assertion: This demonstrates scan resistance
+            // A non-scan-resistant algorithm would likely evict ALL hot items
+            // SIEVE's visited bit mechanism should protect frequently accessed items
+            assertTrue(hotItemsRetained > 0,
+                    "SIEVE cache failed scan resistance test - no hot items survived the sequential scan");
+        }
+
+        @Test
+        @DisplayName("Adaptive Hotness - Old Hot Items Replaced by New Hot Items")
+        void testAdaptiveHotness() {
+            // Cache with capacity 10: first 5 initially hot, then another 5 become hotter
+            int capacity = 10;
+            SieveCache<String, String> cache = new SieveCache<>(capacity);
+            
+            // Phase 1: Establish initial hot items (first 5 slots)
+            String[] initialHotKeys = {"hot1", "hot2", "hot3", "hot4", "hot5"};
+            for (String key : initialHotKeys) {
+                cache.put(key, "initial_" + key);
+            }
+            
+            // Fill remaining capacity with cold items
+            String[] coldKeys = {"cold1", "cold2", "cold3", "cold4", "cold5"};
+            for (String key : coldKeys) {
+                cache.put(key, "cold_" + key);
+            }
+            
+            // Verify cache is at capacity
+            assertEquals(capacity, cache.size(), "Cache should be at full capacity");
+            
+            // Phase 2: Make initial 5 items hot by accessing them frequently
+            for (int round = 0; round < 10; round++) {
+                for (String key : initialHotKeys) {
+                    cache.get(key); // Sets visited bit for initial hot items
+                }
+            }
+            
+            // Verify initial hot items are all present
+            for (String key : initialHotKeys) {
+                assertNotNull(cache.get(key), "Initial hot item should be present: " + key);
+            }
+            
+            System.out.printf("After Phase 2 - Initial hot items established:%n");
+            System.out.printf("  Cache size: %d/%d%n", cache.size(), capacity);
+            
+            // Phase 3: Introduce new items and make them MUCH hotter than the initial ones
+            String[] newHotKeys = {"newhot1", "newhot2", "newhot3", "newhot4", "newhot5"};
+            
+            // Add new items (this will cause evictions)
+            for (String key : newHotKeys) {
+                cache.put(key, "new_" + key);
+            }
+            
+            // Make new items extremely hot (much more access than initial items had)
+            for (int round = 0; round < 50; round++) { // 5x more access than initial items
+                for (String key : newHotKeys) {
+                    cache.get(key); // Sets visited bit repeatedly for new hot items
+                }
+                
+                // Occasionally access initial hot items but much less frequently
+                if (round % 10 == 0) { // Only 1/10th as often
+                    for (String key : initialHotKeys) {
+                        if (cache.containsKey(key)) {
+                            cache.get(key);
+                        }
+                    }
+                }
+            }
+            
+            // Phase 4: Force more evictions by adding additional items
+            // This will test if the cache adapts to the new access pattern
+            String[] additionalItems = {"extra1", "extra2", "extra3", "extra4", "extra5"};
+            for (String key : additionalItems) {
+                cache.put(key, "extra_" + key);
+            }
+            
+            // Phase 5: Continue making new items extremely hot
+            for (int round = 0; round < 20; round++) {
+                for (String key : newHotKeys) {
+                    cache.get(key); // Keep new items very hot
+                }
+            }
+            
+            // Phase 6: Analyze the results
+            int initialHotSurvived = 0;
+            int newHotSurvived = 0;
+            int coldSurvived = 0;
+            int additionalSurvived = 0;
+            
+            for (String key : initialHotKeys) {
+                if (cache.containsKey(key)) {
+                    initialHotSurvived++;
+                }
+            }
+            
+            for (String key : newHotKeys) {
+                if (cache.containsKey(key)) {
+                    newHotSurvived++;
+                }
+            }
+            
+            for (String key : coldKeys) {
+                if (cache.containsKey(key)) {
+                    coldSurvived++;
+                }
+            }
+            
+            for (String key : additionalItems) {
+                if (cache.containsKey(key)) {
+                    additionalSurvived++;
+                }
+            }
+            
+            CacheStats stats = cache.getStats();
+            
+            System.out.printf("Adaptive Hotness Test Results:%n");
+            System.out.printf("  Initial hot items survived: %d/%d%n", initialHotSurvived, initialHotKeys.length);
+            System.out.printf("  New hot items survived: %d/%d%n", newHotSurvived, newHotKeys.length);
+            System.out.printf("  Cold items survived: %d/%d%n", coldSurvived, coldKeys.length);
+            System.out.printf("  Additional items survived: %d/%d%n", additionalSurvived, additionalItems.length);
+            System.out.printf("  Total evictions: %d%n", stats.getEvictions());
+            System.out.printf("  Final cache size: %d/%d%n", cache.size(), capacity);
+            
+            // Key assertions for adaptive behavior:
+            
+            // 1. New hot items should have better survival rate than initial hot items
+            assertTrue(newHotSurvived > initialHotSurvived, 
+                String.format("New hot items (%d) should survive better than initial hot items (%d) " +
+                    "due to higher access frequency", newHotSurvived, initialHotSurvived));
+            
+            // 2. Most new hot items should survive (they were accessed much more frequently)
+            assertTrue(newHotSurvived >= 4, 
+                String.format("Expected at least 4 new hot items to survive, got %d", newHotSurvived));
+            
+            // 3. Cold items should have the lowest survival rate
+            assertTrue(coldSurvived <= initialHotSurvived, 
+                "Cold items should not survive better than any hot items");
+            
+            // 4. Many evictions should have occurred
+            assertTrue(stats.getEvictions() > 5, 
+                String.format("Expected significant evictions (>5), got %d", stats.getEvictions()));
+            
+            // 5. Cache should still be at capacity
+            assertEquals(capacity, cache.size(), "Cache should maintain capacity");
+            
+            // Phase 7: Verify that the cache has adapted to new access patterns
+            // Access new hot items and verify they're still there
+            for (String key : newHotKeys) {
+                if (cache.containsKey(key)) {
+                    String value = cache.get(key);
+                    assertNotNull(value, "New hot item should still be accessible: " + key);
+                    assertTrue(value.startsWith("new_"), "New hot item should retain correct value");
+                }
+            }
+            
+            System.out.printf("%nAdaptive Behavior Verified:%n");
+            System.out.printf("  ✓ New hot items (%d) survived better than initial hot items (%d)%n", 
+                newHotSurvived, initialHotSurvived);
+            System.out.printf("  ✓ Cache adapted to changing access patterns%n");
+            System.out.printf("  ✓ Frequently accessed items retained despite eviction pressure%n");
+            
+            // This test demonstrates that SIEVE can adapt to changing workloads:
+            // - Initially hot items get evicted when new items become hotter
+            // - The cache doesn't stubbornly hold onto old frequently-accessed items
+            // - Access frequency determines survival, not just historical access
+        }
+
+        @Test
+        @DisplayName("Hotness Transition - Gradual Access Pattern Change")
+        void testHotnessTransition() {
+            // Test gradual transition from one hot set to another
+            int capacity = 10;
+            SieveCache<String, String> cache = new SieveCache<>(capacity);
+            
+            // Phase 1: Establish set A as hot
+            String[] setA = {"A1", "A2", "A3", "A4", "A5"};
+            String[] setB = {"B1", "B2", "B3", "B4", "B5"};
+            
+            // Fill cache with both sets
+            for (String key : setA) {
+                cache.put(key, "valueA_" + key);
+            }
+            for (String key : setB) {
+                cache.put(key, "valueB_" + key);
+            }
+            
+            System.out.println(cache);
+            
+            // Phase 2: Make set A hot initially
+            for (int round = 0; round < 20; round++) {
+                for (String key : setA) {
+                    cache.get(key);
+                }
+            }
+            
+            // Phase 3: Gradually shift access pattern from A to B
+            for (int round = 0; round < 30; round++) {
+                // Gradually decrease A access and increase B access
+                double aRatio = Math.max(0, 1.0 - (round / 30.0)); // 1.0 -> 0.0
+                double bRatio = Math.min(1.0, round / 30.0);        // 0.0 -> 1.0
+                
+                // Access set A with decreasing frequency
+                if (Math.random() < aRatio) {
+                    for (String key : setA) {
+                        if (cache.containsKey(key)) {
+                            cache.get(key);
+                        }
+                    }
+                }
+                
+                // Access set B with increasing frequency  
+                if (Math.random() < bRatio) {
+                    for (String key : setB) {
+                        if (cache.containsKey(key)) {
+                            cache.get(key);
+                        }
+                    }
+                }
+                
+                // Add some pressure by inserting new items occasionally
+                if (round> 1  && round % 10 == 0) {
+                    cache.put("temp_" + round, "temp_value");
+                    System.out.println(cache);
+                }
+            }
+            System.out.println(cache);
+            
+            // Phase 4: Make set B very hot
+            for (int round = 0; round < 25; round++) {
+                for (String key : setB) {
+                    if (cache.containsKey(key)) {
+                        cache.get(key);
+                    }
+                }
+            }
+            
+            // Phase 5: Analyze transition results
+            int setASurvived = 0;
+            int setBSurvived = 0;
+            
+            for (String key : setA) {
+                if (cache.containsKey(key)) {
+                    setASurvived++;
+                }
+            }
+            
+            for (String key : setB) {
+                if (cache.containsKey(key)) {
+                    setBSurvived++;
+                }
+            }
+            
+            System.out.printf("Hotness Transition Results:%n");
+            System.out.printf("  Set A (initially hot) survived: %d/%d%n", setASurvived, setA.length);
+            System.out.printf("  Set B (became hot) survived: %d/%d%n", setBSurvived, setB.length);
+            System.out.printf("  Cache utilization: %d/%d%n", cache.size(), capacity);
+            
+            // Assertion: Set B should have better or equal survival since it became the hot set
+            assertTrue(setBSurvived >= setASurvived, 
+                String.format("Set B (%d) should survive better than or equal to Set A (%d) " +
+                    "after becoming the hot set", setBSurvived, setASurvived));
+            
+            System.out.printf("  ✓ Successfully transitioned hotness from Set A to Set B%n");
         }
     }
 }
