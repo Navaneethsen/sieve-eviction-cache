@@ -32,18 +32,6 @@ package org.cache.common;
 public interface IStatisticalCache<K, V> extends ICache<K, V> {
     
     /**
-     * Returns cache statistics.
-     *
-     * @return immutable cache statistics
-     */
-    CacheStats getStats();
-    
-    /**
-     * Clears all statistics counters.
-     */
-    void clearStats();
-    
-    /**
      * Records a cache hit.
      */
     void recordHit();
@@ -57,6 +45,18 @@ public interface IStatisticalCache<K, V> extends ICache<K, V> {
      * Records an eviction.
      */
     void recordEviction();
+
+    /**
+     * Returns cache statistics.
+     *
+     * @return immutable cache statistics
+     */
+    CacheStats getStats();
+    
+    /**
+     * Clears all statistics counters.
+     */
+    void clearStats();
     
     /**
      * Returns the current hit rate as a percentage.
