@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/Navaneethsen/sieve-eviction-cache/workflows/Java%20CI%20with%20Maven/badge.svg)
 ![Java](https://img.shields.io/badge/Java-17-orange)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
 A high-performance, thread-safe Java implementation of the SIEVE cache eviction algorithm with comprehensive statistics tracking.
