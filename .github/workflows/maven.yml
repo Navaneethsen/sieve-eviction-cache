@@ -57,40 +57,6 @@ jobs:
         retention-days: 30
 
   publish:
-    # Only run on releases to avoid version conflicts
-    if: github.event_name == 'release'
-    needs: [test, build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    
-    - name: Configure Maven for GitHub Packages
-      run: |
-        mkdir -p ~/.m2
-        cat > ~/.m2/settings.xml << EOF
-        <settings>
-          <servers>
-            <server>
-              <id>github</id>
-              <username>${{ github.actor }}</username>
-              <password>${{ secrets.GITHUB_TOKEN }}</password>
-            </server>
-          </servers>
-        </settings>
-        EOF
-    
-  publish:
     # Only run on main branch pushes or releases
     if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     needs: [test, build]
