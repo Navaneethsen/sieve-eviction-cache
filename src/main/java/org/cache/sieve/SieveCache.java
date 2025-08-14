@@ -48,8 +48,8 @@ public class SieveCache<K, V> extends AbstractCache<K, V> {
         final K key;
         volatile V value;
         final AtomicBoolean visited;  // SIEVE algorithm's visited bit
-        volatile Node<K, V> prev;     // points toward older nodes (toward tail)
-        volatile Node<K, V> next;     // points toward newer nodes (toward head)
+        volatile Node<K, V> prev;     // points toward newer nodes (toward head)
+        volatile Node<K, V> next;     // points toward older nodes (toward tail)
         
         Node(K key, V value) {
             this.key = key;
@@ -114,6 +114,7 @@ public class SieveCache<K, V> extends AbstractCache<K, V> {
         if (existing != null) {
             existing.value = value;
             existing.visited.set(true);
+            // mayeb I should increment the hit counter
             return;
         }
         
@@ -125,6 +126,7 @@ public class SieveCache<K, V> extends AbstractCache<K, V> {
             if (existing != null) {
                 existing.value = value;
                 existing.visited.set(true);
+                // mayeb I should increment the hit counter
                 return;
             }
             
@@ -136,7 +138,7 @@ public class SieveCache<K, V> extends AbstractCache<K, V> {
                     break;
                 }
             }
-            
+            // mayeb I should increment the miss counter now as the key didnt exist currently
             // Create and insert new node at head
             Node<K, V> newNode = new Node<>(key, value);
             insertAtHead(newNode);
@@ -230,7 +232,7 @@ public class SieveCache<K, V> extends AbstractCache<K, V> {
         // Track starting position to detect full traversal
         Node<K, V> startNode = candidate;
         int iterations = 0;
-        int maxIterations = map.size() * 3; // Safeguard against infinite loops. By the way, this is a thumb-sucked value.
+        int maxIterations = map.size() * 3; // Simple safeguard against infinite loops. By the way, this is a thumb-sucked value.
         
         // Find an object to evict
         do {
