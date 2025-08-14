@@ -6,8 +6,16 @@ name: Java CI with Maven
 on:
   push:
     branches: [ "main", "develop" ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/**'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/**'
   release:
     types: [published]
 
