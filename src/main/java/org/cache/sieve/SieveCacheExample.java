@@ -66,7 +66,7 @@ public class SieveCacheExample {
         
         System.out.println("Retrieved user:1 = " + user1);
         System.out.println("Retrieved user:4 = " + user4);
-        System.out.println("Cache size: " + cache.size());
+        System.out.println("Cache size : " + cache.size());
         
         // Remove a value
         String removed = cache.remove("user:2");
